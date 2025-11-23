@@ -6,6 +6,8 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import vanillacord.packaging.Package;
 
+import java.util.Locale;
+
 public class SourceScanner extends HierarchyScanner {
     private final Package file;
     private ClassData data;
@@ -40,15 +42,16 @@ public class SourceScanner extends HierarchyScanner {
             @Override
             public void visitLdcInsn(Object value) {
                 if (value instanceof String) {
-                    if ("Server console handler".equals(value)) {
+                    final String text = (String) value;
+                    if ("Server console handler".equals(text)) {
                         System.out.print("Found the dedicated server: ");
                         System.out.println(SourceScanner.super.name);
                         file.sources.startup = data;
-                    } else if ("Unexpected hello packet".equals(value)) {
+                    } else if (isLoginHello(text)) {
                         System.out.print("Found the login listener: ");
                         System.out.println(SourceScanner.super.name);
                         file.sources.login = data;
-                    } else if (hasTID && "Payload may not be larger than 1048576 bytes".equals(value)) {
+                    } else if (hasTID && isPayloadTooLarge(text)) {
                         System.out.print("Found a login extension packet: ");
                         System.out.println(SourceScanner.super.name);
                         if (file.sources.send == null) {
@@ -56,7 +59,7 @@ public class SourceScanner extends HierarchyScanner {
                         } else {
                             file.sources.receive = data;
                         }
-                    } else if ("multiplayer.disconnect.incompatible".equals(value) || "multiplayer.disconnect.outdated_server".equals(value) || ((String) value).startsWith("Outdated client! Please use")) {
+                    } else if (isHandshakeDisconnect(text)) {
                         System.out.print("Found the handshake listener: ");
                         System.out.println(SourceScanner.super.name);
                         file.sources.handshake = data;
@@ -65,5 +68,30 @@ public class SourceScanner extends HierarchyScanner {
                 super.visitLdcInsn(value);
             }
         };
+    }
+
+    private static boolean isLoginHello(String text) {
+        String lower = text.toLowerCase(Locale.ROOT);
+        return lower.contains("unexpected hello")
+                || lower.contains("unexpected login")
+                || lower.contains("hello packet")
+                || lower.contains("received hello twice");
+    }
+
+    private static boolean isPayloadTooLarge(String text) {
+        String lower = text.toLowerCase(Locale.ROOT);
+        return lower.contains("payload may not be larger")
+                || lower.contains("payload too large")
+                || text.contains("1048576");
+    }
+
+    private static boolean isHandshakeDisconnect(String text) {
+        String lower = text.toLowerCase(Locale.ROOT);
+        return lower.contains("multiplayer.disconnect.incompatible")
+                || lower.contains("multiplayer.disconnect.outdated_server")
+                || lower.contains("multiplayer.disconnect.outdated_client")
+                || lower.contains("multiplayer.disconnect.incompatible.version")
+                || lower.contains("outdated client! please use")
+                || lower.contains("server is out of date");
     }
 }
