@@ -1,27 +1,60 @@
-name: Build Jar
+name: build-and-publish
 
 on:
   push:
-    branches:
-      - main
-      - master
+    branches: ["**"]
+
+permissions:
+  contents: read
+  packages: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      BRIDGE_OWNER: ${{ vars.BRIDGE_OWNER || github.repository_owner }}
+      BRIDGE_VERSION: ${{ vars.BRIDGE_VERSION || '0.1.0-SNAPSHOT' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Verify no placeholder versions
+        run: |
+          if rg --fixed-strings -- '-PLACEHOLDER' pom.xml; then
+            echo "Found placeholder versions. Please replace -PLACEHOLDER before building."
+            exit 1
+          fi
 
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 21
           cache: maven
+          server-id: bridge-github
+          server-username: GITHUB_ACTOR
+          server-password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Derive version
+        id: version
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            VER="${GITHUB_REF_NAME#v}"
+          else
+            VER="0.1.0-SNAPSHOT.${GITHUB_RUN_NUMBER}"
+          fi
+          echo "VALUE=$VER" >> "$GITHUB_OUTPUT"
+
+      - name: Set project version
+        run: mvn -B -q versions:set -DnewVersion=${{ steps.version.outputs.VALUE }} -DgenerateBackupPoms=false
 
       - name: Build
-        run: mvn -B -DskipTests package
+        run: |
+          if [[ -n "${BRIDGE_VERSION:-}" ]]; then
+            mvn -B verify -Dbridge.owner=${BRIDGE_OWNER} -Dbridge.version=${BRIDGE_VERSION}
+          else
+            mvn -B verify -Dbridge.owner=${BRIDGE_OWNER}
+          fi
 
       - name: Upload jar
         uses: actions/upload-artifact@v4
