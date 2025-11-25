@@ -22,7 +22,12 @@ java -jar VanillaCord.jar <versions...>
 ## Building
 - Requires Java 21+ (Bridge artifacts target Java 21).
 - Bridge artifacts are pulled from GitHub Packages at `https://maven.pkg.github.com/<owner>/Bridge`.
-- `BRIDGE_OWNER` controls which GitHub owner to pull from (defaults to `mark-e-deyoung`).
+- `BRIDGE_OWNER` controls which GitHub owner to pull from (defaults to the repository owner in CI, or `mark-e-deyoung` locally).
 - `BRIDGE_VERSION` pins a specific Bridge release; defaults to `0.1.0-SNAPSHOT` for reproducible builds. Set it to `LATEST` or another tag/SNAPSHOT when you intentionally want the newest.
 - Example: `BRIDGE_OWNER=ME1312 BRIDGE_VERSION=0.1.0-SNAPSHOT.123 mvn -B verify`
 - Compatibility probe: provide a release or snapshot server jar to sanity-check patch targets — `mvn -B verify -Dminecraft.serverJar=/path/to/server-<version>.jar`
+
+## GitHub Packages auth (local)
+- You need a PAT with `read:packages` for the owner hosting Bridge (and `write:packages` if you publish a new Bridge build).
+- Keep auth in-repo to avoid host config issues: `export GH_CONFIG_DIR=$PWD/.gh && printf "%s\n" "$PAT" | gh auth login --with-token`
+- When building locally, set `GITHUB_TOKEN=$PAT` so Maven can read from `https://maven.pkg.github.com/${BRIDGE_OWNER}/Bridge`.

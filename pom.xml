@@ -47,6 +47,17 @@
             </properties>
         </profile>
         <profile>
+            <id>bridge-owner-gh</id>
+            <activation>
+                <property>
+                    <name>env.GITHUB_REPOSITORY_OWNER</name>
+                </property>
+            </activation>
+            <properties>
+                <bridge.owner>${env.GITHUB_REPOSITORY_OWNER}</bridge.owner>
+            </properties>
+        </profile>
+        <profile>
             <id>bridge-version-env</id>
             <activation>
                 <property>
