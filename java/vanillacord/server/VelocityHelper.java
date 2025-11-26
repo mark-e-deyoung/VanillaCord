@@ -27,8 +27,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 @SuppressWarnings("SpellCheckingInspection")
 public class VelocityHelper extends ForwardingHelper {
     private static final Object NAMESPACE = new Invocation(NamespacedKey.class).ofMethod("new").with("velocity").with("player_info").invoke();
-    private static final AttributeKey<Object> LOGIN_KEY = new AttributeKey<>("-vch-login");
-    private static final AttributeKey<GameProfile> PROFILE_KEY = new AttributeKey<>("-vch-profile");
+    private static final AttributeKey<Object> LOGIN_KEY = AttributeKey.valueOf("-vch-login");
+    private static final AttributeKey<GameProfile> PROFILE_KEY = AttributeKey.valueOf("-vch-profile");
     private final byte[][] seecrets;
 
     VelocityHelper(LinkedList<String> seecrets) {

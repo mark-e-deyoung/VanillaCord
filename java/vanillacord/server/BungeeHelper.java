@@ -16,8 +16,8 @@ import java.util.UUID;
 @SuppressWarnings({"AssignmentUsedAsCondition", "SpellCheckingInspection"})
 public class BungeeHelper extends ForwardingHelper {
     private static final Gson GSON = new Gson();
-    private static final AttributeKey<UUID> UUID_KEY = new AttributeKey<>("-vch-uuid");
-    private static final AttributeKey<Property[]> PROPERTIES_KEY = new AttributeKey<>("-vch-properties");
+    private static final AttributeKey<UUID> UUID_KEY = AttributeKey.valueOf("-vch-uuid");
+    private static final AttributeKey<Property[]> PROPERTIES_KEY = AttributeKey.valueOf("-vch-properties");
     private final String[] seecrets;
 
     BungeeHelper() {
@@ -53,8 +53,8 @@ public class BungeeHelper extends ForwardingHelper {
                     boolean invalid = true;
                     final Property[] modified = new Property[length = properties.length - 1];
                     for (Property property : properties) {
-                        if ("bungeeguard-token".equals(property.getName())) {
-                            if (invalid = !invalid || Arrays.binarySearch(seecrets, property.getValue()) < 0) {
+                        if ("bungeeguard-token".equals(property.name())) {
+                            if (invalid = !invalid || Arrays.binarySearch(seecrets, property.value()) < 0) {
                                 break;
                             }
                         } else if (i != length) {
@@ -75,7 +75,7 @@ public class BungeeHelper extends ForwardingHelper {
             Channel channel = new Invocation(PlayerConnection.class).ofMethod("getChannel").with(connection).invoke();
             GameProfile profile = new GameProfile(channel.attr(UUID_KEY).get(), username);
             for (Property property : channel.attr(PROPERTIES_KEY).get()) {
-                profile.getProperties().put(property.getName(), property);
+                profile.getProperties().put(property.name(), property);
             }
             return profile;
         } catch (Exception e) {
