@@ -20,7 +20,7 @@ public class Updater {
         this.file = file;
         this.source = source;
 
-        if (file.types.loadClass("com/mojang/authlib/properties/Property").extended(file.types.loadClass("java/lang/Record"))) {
+        if (isRecord("com/mojang/authlib/properties/Property")) {
             this.updates = AuthLibProperty::new;
         } else { // 1.20 > version
             final Object key;
@@ -47,6 +47,22 @@ public class Updater {
                 }
             }, 0);
             zos.write(writer.toByteArray());
+        }
+    }
+
+    private boolean isRecord(String internalName) {
+        try {
+            if (file.types.loadClass(internalName).extended(file.types.loadClass("java/lang/Record"))) {
+                return true;
+            }
+        } catch (Throwable ignored) {
+        }
+
+        try {
+            Class<?> type = Class.forName(internalName.replace('/', '.'), false, source);
+            return Record.class.isAssignableFrom(type);
+        } catch (ClassNotFoundException ignored) {
+            return false;
         }
     }
 }
