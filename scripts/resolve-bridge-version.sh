@@ -21,11 +21,14 @@ META_URL="https://maven.pkg.github.com/${BRIDGE_OWNER}/Bridge/net/ME1312/ASM/bri
 xml="$(curl -fsSL -u "${ACTOR}:${TOKEN}" "${META_URL}")"
 
 # Pick the <release>, <latest>, or last listed <version>.
-version="$(python - <<'PY' <<<"$xml"
+version="$(
+  XML_CONTENT="$xml" python - <<'PY'
+import os
 import sys
 import xml.etree.ElementTree as ET
 
-root = ET.fromstring(sys.stdin.read())
+xml = os.environ["XML_CONTENT"]
+root = ET.fromstring(xml)
 for path in ("./versioning/release", "./versioning/latest"):
     node = root.find(path)
     if node is not None and node.text and node.text.strip():
