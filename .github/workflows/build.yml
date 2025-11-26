@@ -14,6 +14,8 @@ jobs:
     env:
       BRIDGE_OWNER: ${{ github.repository_owner }}
       BRIDGE_VERSION: ${{ vars.BRIDGE_VERSION || '' }}
+      BRIDGE_PACKAGES_USERNAME: ${{ vars.BRIDGE_PACKAGES_USERNAME || github.actor }}
+      BRIDGE_PACKAGES_TOKEN: ${{ secrets.BRIDGE_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -32,8 +34,8 @@ jobs:
           java-version: 21
           cache: maven
           server-id: bridge-github
-          server-username: GITHUB_ACTOR
-          server-password: ${{ secrets.GITHUB_TOKEN }}
+          server-username: BRIDGE_PACKAGES_USERNAME
+          server-password: BRIDGE_PACKAGES_TOKEN
 
       - name: Derive version
         id: version
@@ -52,7 +54,7 @@ jobs:
         if: env.BRIDGE_VERSION == ''
         env:
           BRIDGE_OWNER: ${{ env.BRIDGE_OWNER }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ env.BRIDGE_PACKAGES_TOKEN }}
         run: |
           echo "Resolving Bridge version for owner ${BRIDGE_OWNER}"
           VERSION="$(./scripts/resolve-bridge-version.sh)"

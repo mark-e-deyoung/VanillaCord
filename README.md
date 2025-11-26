@@ -31,3 +31,6 @@ java -jar VanillaCord.jar <versions...>
 - You need a PAT with `read:packages` for the owner hosting Bridge (and `write:packages` if you publish a new Bridge build).
 - Keep auth in-repo to avoid host config issues: `export GH_CONFIG_DIR=$PWD/.gh && printf "%s\n" "$PAT" | gh auth login --with-token`
 - When building locally, set `GITHUB_TOKEN=$PAT` so Maven (and `scripts/resolve-bridge-version.sh`) can read from `https://maven.pkg.github.com/${BRIDGE_OWNER}/Bridge`.
+
+## GitHub Packages auth (CI)
+- The workflow uses `BRIDGE_PACKAGES_TOKEN` (PAT with `read:packages` and `repo` if Bridge is private) and `BRIDGE_PACKAGES_USERNAME` if provided; otherwise it falls back to the default `GITHUB_TOKEN`/actor. Add the secret in repo settings if builds need to read Bridge from another private repo.
