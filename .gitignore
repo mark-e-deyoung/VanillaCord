@@ -1,10 +1,33 @@
-# Hide System/IDE files
+# IDE/System files
 .idea/
+.vscode/
 *.iml
-.DS_STORE
+.DS_Store
+Thumbs.db
 
+# Editor swap/backup files
+*~
+*.swp
+*.swo
 
-# Hide generated artifacts
-/artifacts/
+# Build outputs
 /build/
+**/build/
+/target/
+**/target/
+/out/
+/bin/
+/dist/
 /javadoc/
+/artifacts/
+.gradle/
+/.m2/
+
+# Java artifacts
+*.class
+*.jar
+*.war
+*.ear
+*.log
+dependency-reduced-pom.xml
+hs_err_pid*

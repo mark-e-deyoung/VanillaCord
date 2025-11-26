@@ -12,8 +12,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      BRIDGE_OWNER: ${{ vars.BRIDGE_OWNER || github.repository_owner }}
-      BRIDGE_VERSION: ${{ vars.BRIDGE_VERSION || '0.1.0-SNAPSHOT' }}
+      BRIDGE_OWNER: ${{ github.repository_owner }}
+      BRIDGE_VERSION: ${{ vars.BRIDGE_VERSION || '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -47,6 +47,17 @@ jobs:
 
       - name: Set project version
         run: mvn -B -q versions:set -DnewVersion=${{ steps.version.outputs.VALUE }} -DgenerateBackupPoms=false
+
+      - name: Resolve Bridge version from GitHub Packages
+        if: env.BRIDGE_VERSION == ''
+        env:
+          BRIDGE_OWNER: ${{ env.BRIDGE_OWNER }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Resolving Bridge version for owner ${BRIDGE_OWNER}"
+          VERSION="$(./scripts/resolve-bridge-version.sh)"
+          echo "Using Bridge ${VERSION}"
+          echo "BRIDGE_VERSION=${VERSION}" >> "$GITHUB_ENV"
 
       - name: Build
         run: |
