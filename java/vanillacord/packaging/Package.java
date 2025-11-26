@@ -13,7 +13,7 @@ public abstract class Package {
     public final HashMap<String, Function<byte[], byte[]>> patches = new HashMap<>();
     public final Sources sources = new Sources();
     public final TypeMap types = new TypeMap();
-    Package() {}
+    protected Package() {}
 
     public abstract ZipInputStream read(Path path) throws Throwable;
     public abstract ZipOutputStream write(Path path) throws Throwable;
