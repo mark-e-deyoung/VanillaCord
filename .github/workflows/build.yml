@@ -3,19 +3,28 @@ name: build-and-publish
 on:
   push:
     branches: ["**"]
+  release:
+    types: [published, released]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to build and upload"
+        required: true
+
+env:
+  BRIDGE_OWNER: ${{ github.repository_owner }}
+  BRIDGE_VERSION: ${{ vars.BRIDGE_VERSION || '' }}
+  BRIDGE_PACKAGES_USERNAME: ${{ vars.BRIDGE_PACKAGES_USERNAME || github.actor }}
+  BRIDGE_PACKAGES_TOKEN: ${{ secrets.BRIDGE_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
 
 permissions:
-  contents: read
+  contents: write
   packages: read
 
 jobs:
   build:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
-    env:
-      BRIDGE_OWNER: ${{ github.repository_owner }}
-      BRIDGE_VERSION: ${{ vars.BRIDGE_VERSION || '' }}
-      BRIDGE_PACKAGES_USERNAME: ${{ vars.BRIDGE_PACKAGES_USERNAME || github.actor }}
-      BRIDGE_PACKAGES_TOKEN: ${{ secrets.BRIDGE_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -75,3 +84,79 @@ jobs:
           name: VanillaCord
           path: artifacts/VanillaCord.jar
           if-no-files-found: error
+
+  release:
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine tag
+        id: vars
+        run: |
+          if [[ "${GITHUB_EVENT_NAME}" == "release" ]]; then
+            TAG="${GITHUB_REF_NAME}"
+          else
+            TAG="${{ inputs.tag }}"
+          fi
+          if [[ -z "${TAG}" ]]; then
+            echo "Tag is required."
+            exit 1
+          fi
+          echo "TAG=${TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.vars.outputs.TAG }}
+
+      - name: Verify no placeholder versions
+        run: |
+          if rg --fixed-strings -- '-PLACEHOLDER' pom.xml; then
+            echo "Found placeholder versions. Please replace -PLACEHOLDER before building."
+            exit 1
+          fi
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+          server-id: bridge-github
+          server-username: BRIDGE_PACKAGES_USERNAME
+          server-password: BRIDGE_PACKAGES_TOKEN
+
+      - name: Derive version
+        id: version
+        run: |
+          VER="${{ steps.vars.outputs.TAG }}"
+          VER="${VER#v}"
+          echo "VALUE=$VER" >> "$GITHUB_OUTPUT"
+
+      - name: Set project version
+        run: mvn -B -q versions:set -DnewVersion=${{ steps.version.outputs.VALUE }} -DgenerateBackupPoms=false
+
+      - name: Resolve Bridge version from GitHub Packages
+        if: env.BRIDGE_VERSION == ''
+        env:
+          BRIDGE_OWNER: ${{ env.BRIDGE_OWNER }}
+          GITHUB_TOKEN: ${{ env.BRIDGE_PACKAGES_TOKEN }}
+        run: |
+          echo "Resolving Bridge version for owner ${BRIDGE_OWNER}"
+          VERSION="$(./scripts/resolve-bridge-version.sh)"
+          echo "Using Bridge ${VERSION}"
+          echo "BRIDGE_VERSION=${VERSION}" >> "$GITHUB_ENV"
+
+      - name: Build
+        run: |
+          if [[ -n "${BRIDGE_VERSION:-}" ]]; then
+            mvn -B verify -Dbridge.owner=${BRIDGE_OWNER} -Dbridge.version=${BRIDGE_VERSION}
+          else
+            mvn -B verify -Dbridge.owner=${BRIDGE_OWNER}
+          fi
+
+      - name: Publish release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.vars.outputs.TAG }}
+          files: artifacts/VanillaCord.jar
+          fail_on_unmatched_files: true
