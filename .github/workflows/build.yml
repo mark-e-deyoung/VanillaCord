@@ -1,8 +1,6 @@
 name: build-and-publish
 
 on:
-  push:
-    branches: ["**"]
   release:
     types: [published, released]
   workflow_dispatch:
@@ -23,7 +21,6 @@ permissions:
 
 jobs:
   build:
-    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -86,7 +83,6 @@ jobs:
           if-no-files-found: error
 
   release:
-    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: Determine tag
