@@ -57,7 +57,7 @@ jobs:
           echo "VALUE=$VER" >> "$GITHUB_OUTPUT"
 
       - name: Set project version
-        run: mvn -B -q versions:set -DnewVersion=${{ steps.version.outputs.VALUE }} -DgenerateBackupPoms=false
+        run: mvn -B -q org.codehaus.mojo:versions-maven-plugin:2.16.2:set -DnewVersion=${{ steps.version.outputs.VALUE }} -DgenerateBackupPoms=false
 
       - name: Resolve Bridge version from GitHub Packages
         if: env.BRIDGE_VERSION == ''
@@ -133,7 +133,7 @@ jobs:
           echo "VALUE=$VER" >> "$GITHUB_OUTPUT"
 
       - name: Set project version
-        run: mvn -B -q versions:set -DnewVersion=${{ steps.version.outputs.VALUE }} -DgenerateBackupPoms=false
+        run: mvn -B -q org.codehaus.mojo:versions-maven-plugin:2.16.2:set -DnewVersion=${{ steps.version.outputs.VALUE }} -DgenerateBackupPoms=false
 
       - name: Resolve Bridge version from GitHub Packages
         if: env.BRIDGE_VERSION == ''
