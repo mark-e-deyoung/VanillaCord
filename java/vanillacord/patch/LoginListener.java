@@ -165,7 +165,7 @@ public class LoginListener extends ClassVisitor implements Function<ClassVisitor
                         state = 3;
                         undo.add(() -> super.visitFieldInsn(GETFIELD, owner, name, "Lnet/minecraft/server/MinecraftServer;"));
                         return;
-                    } else if (state == 6 && opcode == GETFIELD && desc.equals("Ljava/lang/String;") && file.sources.login.owner.clazz.type.getInternalName().equals(owner)) {
+                    } else if (state == 6 && opcode == GETFIELD && desc.equals("Ljava/lang/String;")) {
                         state = 7;
                         undo.add(() -> super.visitFieldInsn(GETFIELD, owner, name, "Ljava/lang/String;"));
                         return;
@@ -182,7 +182,7 @@ public class LoginListener extends ClassVisitor implements Function<ClassVisitor
                         undo.clear();
                         state = 4;
                         return;
-                    } else if (state == 7 && opcode == INVOKESTATIC && desc.equals("(Ljava/lang/String;)Lcom/mojang/authlib/GameProfile;")) {
+                    } else if (state == 7 && ((opcode == INVOKESTATIC && desc.equals("(Ljava/lang/String;)Lcom/mojang/authlib/GameProfile;")) || (opcode == INVOKESPECIAL && owner.equals("com/mojang/authlib/GameProfile") && desc.equals("(Ljava/util/UUID;Ljava/lang/String;)V")))) {
                         mv.visitFieldInsn(GETSTATIC,
                                 "vanillacord/server/VanillaCord",
                                 "helper",
