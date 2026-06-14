@@ -2,7 +2,7 @@ name: build-and-publish
 
 on:
   release:
-    types: [published, released]
+    types: [published]
   workflow_dispatch:
     inputs:
       tag:
@@ -13,7 +13,7 @@ env:
   BRIDGE_OWNER: ${{ github.repository_owner }}
   BRIDGE_VERSION: ${{ vars.BRIDGE_VERSION || '' }}
   BRIDGE_PACKAGES_USERNAME: ${{ vars.BRIDGE_PACKAGES_USERNAME || github.actor }}
-  BRIDGE_PACKAGES_TOKEN: ${{ secrets.BRIDGE_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
+  BRIDGE_PACKAGES_TOKEN: ${{ secrets.BRIDGE_PACKAGES_TOKEN || github.token }}
 
 permissions:
   contents: write
