@@ -23,6 +23,7 @@ Thumbs.db
 .gradle/
 /.m2/
 .env
+.vanillacord-compat-docker.sh
 
 # Java artifacts
 *.class

@@ -3,7 +3,7 @@
 Welcome! If you are an AI agent working on this repository, please review these instructions to understand the stack and workflows for this project.
 
 ## Tech Stack
-* **Java:** Version 21
+* **Java:** Build with JDK 25 for current Minecraft compatibility probes. The project currently emits Java 21 bytecode via `maven.compiler.release`.
 * **Build Tool:** Maven
 
 ## Build Instructions

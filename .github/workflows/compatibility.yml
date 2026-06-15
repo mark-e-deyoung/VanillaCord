@@ -1,0 +1,66 @@
+name: minecraft-compatibility
+
+on:
+  workflow_dispatch:
+    inputs:
+      include_snapshot:
+        description: "Include latest Mojang snapshot/RC"
+        required: false
+        default: "true"
+
+env:
+  BRIDGE_OWNER: ${{ github.repository_owner }}
+  BRIDGE_VERSION: ${{ vars.BRIDGE_VERSION || '' }}
+  BRIDGE_PACKAGES_USERNAME: ${{ vars.BRIDGE_PACKAGES_USERNAME || github.actor }}
+  BRIDGE_PACKAGES_TOKEN: ${{ secrets.BRIDGE_PACKAGES_TOKEN || github.token }}
+  VANILLACORD_INCLUDE_SNAPSHOT: ${{ inputs.include_snapshot || 'true' }}
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  compatibility:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: maven
+          server-id: bridge-github
+          server-username: BRIDGE_PACKAGES_USERNAME
+          server-password: BRIDGE_PACKAGES_TOKEN
+
+      - name: Resolve Bridge version from GitHub Packages
+        if: env.BRIDGE_VERSION == ''
+        env:
+          BRIDGE_OWNER: ${{ env.BRIDGE_OWNER }}
+          GITHUB_TOKEN: ${{ env.BRIDGE_PACKAGES_TOKEN }}
+        run: |
+          VERSION="$(bash ./scripts/resolve-bridge-version.sh)"
+          echo "Using Bridge ${VERSION}"
+          echo "BRIDGE_VERSION=${VERSION}" >> "$GITHUB_ENV"
+
+      - name: Build VanillaCord
+        run: |
+          if [[ -n "${BRIDGE_VERSION:-}" ]]; then
+            mvn -B verify -Dbridge.owner=${BRIDGE_OWNER} -Dbridge.version=${BRIDGE_VERSION}
+          else
+            mvn -B verify -Dbridge.owner=${BRIDGE_OWNER}
+          fi
+
+      - name: Run Minecraft compatibility probe
+        run: bash ./scripts/check-minecraft-compatibility.sh artifacts/VanillaCord.jar
+
+      - name: Upload compatibility report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: minecraft-compatibility-report
+          path: compatibility-report.md
+          if-no-files-found: warn
