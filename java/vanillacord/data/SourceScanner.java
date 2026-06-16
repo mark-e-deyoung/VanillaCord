@@ -72,6 +72,9 @@ public class SourceScanner extends HierarchyScanner {
 
     private static boolean isLoginHello(String text) {
         String lower = text.toLowerCase(Locale.ROOT);
+        if (lower.contains("acknowledg")) {
+            return false;
+        }
         return lower.contains("unexpected hello")
                 || lower.contains("unexpected login")
                 || lower.contains("hello packet")

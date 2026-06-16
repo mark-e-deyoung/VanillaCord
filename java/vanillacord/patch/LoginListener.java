@@ -15,15 +15,20 @@ import static org.objectweb.asm.Opcodes.*;
 public class LoginListener extends ClassVisitor implements Function<ClassVisitor, ClassVisitor> {
     private final Package file;
     private final MethodData extension;
+    private final FieldData username;
 
     public LoginListener(Package file) throws Throwable {
         super(ASM9);
         this.file = file;
+        FieldData username = null;
         for (FieldData field : file.sources.login.owner.fields.values()) {
             if ((field.access & ACC_STATIC) == 0 && field.type.equals(file.sources.connection.type)) {
                 file.sources.connection = field;
+            } else if ((field.access & (ACC_STATIC | ACC_FINAL)) == 0 && field.descriptor.equals("Ljava/lang/String;")) {
+                username = field;
             }
         }
+        this.username = username;
         if (file.sources.receive != null) {
             for (MethodData method : file.sources.login.owner.methods.values()) {
                 if (method.arguments.length == 1) {
@@ -181,6 +186,35 @@ public class LoginListener extends ClassVisitor implements Function<ClassVisitor
                         super.mv = null;
                         undo.clear();
                         state = 4;
+                        return;
+                    } else if (state == 1 && opcode == INVOKESTATIC && desc.equals("(Ljava/lang/String;)Lcom/mojang/authlib/GameProfile;")) {
+                        mv.visitInsn(POP);
+                        mv.visitFieldInsn(GETSTATIC,
+                                "vanillacord/server/VanillaCord",
+                                "helper",
+                                "Lvanillacord/server/ForwardingHelper;"
+                        );
+                        mv.visitVarInsn(ALOAD, 0);
+                        mv.visitFieldInsn(
+                                GETFIELD,
+                                file.sources.connection.owner.clazz.type.getInternalName(),
+                                file.sources.connection.name,
+                                file.sources.connection.descriptor
+                        );
+                        mv.visitVarInsn(ALOAD, 0);
+                        mv.visitFieldInsn(
+                                GETFIELD,
+                                username.owner.clazz.type.getInternalName(),
+                                username.name,
+                                username.descriptor
+                        );
+                        mv.visitMethodInsn(INVOKEVIRTUAL,
+                                "vanillacord/server/ForwardingHelper",
+                                "injectProfile",
+                                "(Ljava/lang/Object;Ljava/lang/String;)Lcom/mojang/authlib/GameProfile;",
+                                false
+                        );
+                        state = 8;
                         return;
                     } else if (state == 7 && ((opcode == INVOKESTATIC && desc.equals("(Ljava/lang/String;)Lcom/mojang/authlib/GameProfile;")) || (opcode == INVOKESPECIAL && owner.equals("com/mojang/authlib/GameProfile") && desc.equals("(Ljava/util/UUID;Ljava/lang/String;)V")))) {
                         mv.visitFieldInsn(GETSTATIC,
