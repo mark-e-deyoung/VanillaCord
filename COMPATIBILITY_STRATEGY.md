@@ -1,6 +1,6 @@
 # Minecraft Compatibility Strategy
 
-Last reviewed: 2026-06-15
+Last reviewed: 2026-06-18
 
 ## Current Findings
 
@@ -22,13 +22,26 @@ Important implementation points:
 - The README currently claims broad support through `1.21`, but Mojang's
   current release line has moved to calendar versions.
 
-As of this review, Mojang's manifest reports:
+As of the latest deployment validation, Mojang's manifest reports:
 
-- latest stable release: `26.1.2`
-- latest snapshot/RC: `26.2-rc-2`
+- latest stable release: `26.2`
+- latest snapshot/RC: not rechecked during the final deployment pass
 - current Minecraft/Paper server runtime line requires Java 25; run
   compatibility probes with JDK 25 even though VanillaCord currently emits Java
   21 bytecode for its own classes.
+
+Additional finding from the 2026-06-16 production fix:
+
+- VanillaCord `v2.3` could read Java 25-era classes but failed while patching
+  current 26.x login flow. The partially written bundled jar was cached by the
+  vanilla server container and later failed at boot with a missing
+  `net/minecraft/server/permissions/PermissionSet` class.
+- The scanner was selecting `handleLoginAcknowledgement` because the string
+  `Unexpected login acknowledgement packet` matched the loose
+  `unexpected login` heuristic. `v2.4` excludes acknowledgement text from login
+  hello discovery and handles the current offline-profile call shape.
+- The vanilla CapRover image now deletes partial `out/<version>.jar` files on
+  failed VanillaCord installs to avoid reusing broken output.
 
 ## Risk Areas
 
@@ -120,6 +133,18 @@ The first milestone is now started by adding:
 
 These provide real patching signal against current Mojang releases and the
 maintained matrix before deeper code refactoring.
+
+## Current Release Status
+
+- `v2.4` is the current release and has a GitHub Actions-published
+  `VanillaCord.jar` asset.
+- Local validation patched Minecraft `26.1.2` successfully after the fix and
+  confirmed the nested bundled server jar retained `PermissionSet.class` and
+  VanillaCord helper classes.
+- Production validation then ran Minecraft `26.2` through the CapRover vanilla
+  image successfully.
+- Next release hardening should gate releases on the compatibility probe instead
+  of relying on manual local and production validation.
 
 Local usage from Windows:
 

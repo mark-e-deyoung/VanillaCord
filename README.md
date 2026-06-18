@@ -33,20 +33,20 @@ through Paper's own `config/paper-global.yml`.
 Download `VanillaCord.jar`, then run it with one or more Minecraft versions:
 
 ```sh
-java -jar VanillaCord.jar 26.1.2
+java -jar VanillaCord.jar 26.2
 ```
 
 The patched server jar is written to:
 
 ```text
-out/26.1.2.jar
+out/26.2.jar
 ```
 
 Run the patched jar from the server directory that contains `server.properties`,
 `eula.txt`, and `vanillacord.txt`:
 
 ```sh
-java -Xms2G -Xmx2G -jar out/26.1.2.jar --nogui
+java -Xms2G -Xmx2G -jar out/26.2.jar --nogui
 ```
 
 Current Minecraft server releases require Java 25. Older Minecraft versions may
@@ -129,7 +129,7 @@ In this workspace, the vanilla server image downloads the latest VanillaCord
 release and patches the selected vanilla server version at runtime. Set:
 
 ```text
-MINECRAFT_SERVER_VERSION=26.1.2
+MINECRAFT_SERVER_VERSION=26.2
 FORWARDING_SECRET=replace-with-a-long-random-secret
 SERVER_EULA=true
 ```
@@ -152,3 +152,9 @@ use the same `FORWARDING_SECRET` as Velocity.
 
 ## GitHub Packages auth (CI)
 - The workflow uses `BRIDGE_PACKAGES_TOKEN` (PAT with `read:packages` and `repo` if Bridge is private) and `BRIDGE_PACKAGES_USERNAME` if provided; otherwise it falls back to the default `GITHUB_TOKEN`/actor. Add the secret in repo settings if builds need to read Bridge from another private repo.
+
+## Current fork status
+- Latest validated release: `v2.4`.
+- Last validated current Minecraft release: `26.2`.
+- `v2.4` fixes current-version login listener discovery and preserves the full bundled server jar when patching 26.x releases.
+- The CapRover vanilla image downloads the latest release asset from this fork and was validated with Minecraft `26.2`.
