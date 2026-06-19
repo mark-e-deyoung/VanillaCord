@@ -1,6 +1,7 @@
 package vanillacord.patch;
 
 import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import vanillacord.data.FieldData;
@@ -52,6 +53,19 @@ public class LoginListener extends ClassVisitor implements Function<ClassVisitor
     public ClassVisitor apply(ClassVisitor visitor) {
         cv = visitor;
         return this;
+    }
+
+    @Override
+    public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
+        if (file.sources.connection.name.equals(name) && file.sources.connection.descriptor.equals(descriptor)) {
+            // LoginPacket reads this field from a different Minecraft package.
+            access = makePublic(access);
+        }
+        return super.visitField(access, name, descriptor, signature, value);
+    }
+
+    static int makePublic(int access) {
+        return (access & ~(ACC_PRIVATE | ACC_PROTECTED)) | ACC_PUBLIC;
     }
 
     @Override

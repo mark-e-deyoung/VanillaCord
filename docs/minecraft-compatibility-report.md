@@ -1,14 +1,14 @@
 # VanillaCord Minecraft Compatibility Report
 
-No generated compatibility run has been committed yet.
+- Generated: `2026-06-19T10:01:51Z`
+- Manifest: `https://piston-meta.mojang.com/mc/game/version_manifest_v2.json`
+- Latest release: `26.2`
+- Latest snapshot: `26.2`
+- Jar: `artifacts/VanillaCord.jar`
+- Required supported matrix: ``
+- Best-effort legacy matrix: ``
+- Include snapshot/RC: `false`
 
-Generate this file with:
-
-```powershell
-$env:GITHUB_TOKEN = (gh auth token).Trim()
-.\scripts\Invoke-CompatibilityProbe.ps1 -UseDocker
-```
-
-GitHub Actions also uploads this path as the `minecraft-compatibility-report`
-artifact and appends the report to the workflow summary.
-
+| Tier | Version | Result |
+| --- | --- | --- |
+| required | `26.2` | pass |
