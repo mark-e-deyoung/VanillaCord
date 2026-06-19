@@ -155,7 +155,9 @@ use the same `FORWARDING_SECRET` as Velocity.
 - The workflow uses `BRIDGE_PACKAGES_TOKEN` (PAT with `read:packages` and `repo` if Bridge is private) and `BRIDGE_PACKAGES_USERNAME` if provided; otherwise it falls back to the default `GITHUB_TOKEN`/actor. Add the secret in repo settings if builds need to read Bridge from another private repo.
 
 ## Current fork status
-- Latest validated release: `v2.5`.
+- Latest validated release: [`v2.7`](https://github.com/mark-e-deyoung/VanillaCord/releases/latest).
 - Last validated current Minecraft release: `26.2`.
-- `v2.5` also makes the selected login listener connection field accessible to the injected packet hook, fixing Minecraft 26.2 Velocity logins.
+- Tested against the full required supported matrix: 26.2 through 1.18.2.
+- [Compatibility report](docs/minecraft-compatibility-report.md) — covers required releases and best-effort legacy releases.
+- `v2.7` fixes GameProfile record compatibility with Minecraft 26.2's authlib-9.0.75 (immutable PropertyMap handling).
 - The CapRover vanilla image downloads the latest release asset from this fork and was validated with Minecraft `26.2`.
