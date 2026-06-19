@@ -140,6 +140,7 @@ use the same `FORWARDING_SECRET` as Velocity.
 ## Building
 - Use JDK 25 for current Minecraft compatibility checks. The Maven build still emits Java 21 bytecode (`maven.compiler.release=21`) so the helper jar is not made Java 25-only unless that becomes necessary.
 - Bridge artifacts are pulled from GitHub Packages at `https://maven.pkg.github.com/<owner>/Bridge`.
+- Bridge is still required by the current patcher and build. See `docs/bridge-dependency.md` for the dependency and fork strategy.
 - `BRIDGE_OWNER` controls which GitHub owner to pull from (defaults to the repository owner in CI, or `mark-e-deyoung` locally).
 - `BRIDGE_VERSION` pins a specific Bridge build. GitHub builds publish run-numbered versions (e.g., `0.1.0-SNAPSHOT.123`); leave `BRIDGE_VERSION` unset/`LATEST` to auto-resolve the latest published version from GitHub Packages or pin it explicitly for reproducible builds.
 - Example: `BRIDGE_OWNER=ME1312 BRIDGE_VERSION=$(./scripts/resolve-bridge-version.sh) mvn -B verify`

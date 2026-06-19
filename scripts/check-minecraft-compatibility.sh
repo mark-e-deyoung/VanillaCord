@@ -3,10 +3,18 @@ set -uo pipefail
 
 JAR_PATH="${1:-artifacts/VanillaCord.jar}"
 MANIFEST_URL="${MINECRAFT_MANIFEST_URL:-https://piston-meta.mojang.com/mc/game/version_manifest_v2.json}"
-REQUIRED_SUPPORTED="${VANILLACORD_REQUIRED_SUPPORTED:-1.21.11 1.20.6 1.20.4 1.19.4 1.18.2}"
-BEST_EFFORT_LEGACY="${VANILLACORD_BEST_EFFORT_LEGACY:-1.17.1 1.16.5 1.12.2 1.8.9 1.7.10}"
+REQUIRED_SUPPORTED="${VANILLACORD_REQUIRED_SUPPORTED-1.21.11 1.20.6 1.20.4 1.19.4 1.18.2}"
+BEST_EFFORT_LEGACY="${VANILLACORD_BEST_EFFORT_LEGACY-1.17.1 1.16.5 1.12.2 1.8.9 1.7.10}"
 INCLUDE_SNAPSHOT="${VANILLACORD_INCLUDE_SNAPSHOT:-true}"
-REPORT_PATH="${VANILLACORD_COMPAT_REPORT:-compatibility-report.md}"
+REPORT_PATH="${VANILLACORD_COMPAT_REPORT:-docs/minecraft-compatibility-report.md}"
+
+if [[ "$REQUIRED_SUPPORTED" == "none" || "$REQUIRED_SUPPORTED" == "-" ]]; then
+  REQUIRED_SUPPORTED=""
+fi
+
+if [[ "$BEST_EFFORT_LEGACY" == "none" || "$BEST_EFFORT_LEGACY" == "-" ]]; then
+  BEST_EFFORT_LEGACY=""
+fi
 
 if [[ ! -f "$JAR_PATH" ]]; then
   echo "VanillaCord jar not found: $JAR_PATH" >&2
@@ -78,12 +86,17 @@ for version in $BEST_EFFORT_LEGACY; do
 done
 
 {
+  mkdir -p "$(dirname "$REPORT_PATH")"
   echo "# VanillaCord Minecraft Compatibility Report"
   echo
+  echo "- Generated: \`$(date -u +%Y-%m-%dT%H:%M:%SZ)\`"
   echo "- Manifest: \`$MANIFEST_URL\`"
   echo "- Latest release: \`$latest_release\`"
   echo "- Latest snapshot: \`$latest_snapshot\`"
   echo "- Jar: \`$JAR_PATH\`"
+  echo "- Required supported matrix: \`$REQUIRED_SUPPORTED\`"
+  echo "- Best-effort legacy matrix: \`$BEST_EFFORT_LEGACY\`"
+  echo "- Include snapshot/RC: \`$INCLUDE_SNAPSHOT\`"
   echo
   echo "| Tier | Version | Result |"
   echo "| --- | --- | --- |"

@@ -4,6 +4,7 @@ param(
     [string]$GitHubToken = $env:GITHUB_TOKEN,
     [string]$RequiredSupported = $env:VANILLACORD_REQUIRED_SUPPORTED,
     [string]$BestEffortLegacy = $env:VANILLACORD_BEST_EFFORT_LEGACY,
+    [string]$ReportPath = $env:VANILLACORD_COMPAT_REPORT,
     [switch]$SkipSnapshot,
     [switch]$UseDocker
 )
@@ -27,6 +28,27 @@ if ([string]::IsNullOrWhiteSpace($GitHubToken)) {
 
 $repo = Resolve-Path (Join-Path $PSScriptRoot "..")
 $includeSnapshot = if ($SkipSnapshot) { "false" } else { "true" }
+if ([string]::IsNullOrWhiteSpace($ReportPath)) {
+    $ReportPath = "docs/minecraft-compatibility-report.md"
+}
+
+function Get-BashPath {
+    $bash = Get-Command bash -ErrorAction SilentlyContinue
+    if ($bash -and $bash.Source -notlike "*WindowsApps*" -and $bash.Source -notlike "*system32*") {
+        return $bash.Source
+    }
+
+    $gitBash = Get-Command "C:\Program Files\Git\bin\bash.exe" -ErrorAction SilentlyContinue
+    if ($gitBash) {
+        return $gitBash.Source
+    }
+
+    if ($bash) {
+        return $bash.Source
+    }
+
+    throw "bash was not found. Install Git for Windows, WSL, or rerun with -UseDocker."
+}
 
 function Invoke-LocalProbe {
     $mvn = Get-Command mvn -ErrorAction SilentlyContinue
@@ -37,7 +59,8 @@ function Invoke-LocalProbe {
     if ([string]::IsNullOrWhiteSpace($BridgeVersion)) {
         $env:BRIDGE_OWNER = $BridgeOwner
         $env:GITHUB_TOKEN = $GitHubToken
-        $BridgeVersion = (& bash ./scripts/resolve-bridge-version.sh).Trim()
+        $bashPath = Get-BashPath
+        $BridgeVersion = (& $bashPath ./scripts/resolve-bridge-version.sh).Trim()
     }
 
     & mvn -B verify "-Dbridge.owner=$BridgeOwner" "-Dbridge.version=$BridgeVersion"
@@ -52,7 +75,9 @@ function Invoke-LocalProbe {
     if ($null -ne $BestEffortLegacy) {
         $env:VANILLACORD_BEST_EFFORT_LEGACY = $BestEffortLegacy
     }
-    & bash ./scripts/check-minecraft-compatibility.sh artifacts/VanillaCord.jar
+    $env:VANILLACORD_COMPAT_REPORT = $ReportPath
+    $bashPath = Get-BashPath
+    & $bashPath ./scripts/check-minecraft-compatibility.sh artifacts/VanillaCord.jar
     if ($LASTEXITCODE -ne 0) {
         throw "Compatibility probe failed with exit code $LASTEXITCODE"
     }
@@ -105,6 +130,7 @@ if [ -z "`$BRIDGE_VERSION" ]; then
 fi
 mvn -B verify -Dbridge.owner="`$BRIDGE_OWNER" -Dbridge.version="`$BRIDGE_VERSION"
 export VANILLACORD_INCLUDE_SNAPSHOT='$includeSnapshot'
+export VANILLACORD_COMPAT_REPORT='$ReportPath'
 bash /tmp/vanillacord-scripts/check-minecraft-compatibility.sh artifacts/VanillaCord.jar
 "@
 
@@ -118,6 +144,7 @@ bash /tmp/vanillacord-scripts/check-minecraft-compatibility.sh artifacts/Vanilla
             -e "BRIDGE_OWNER=$BridgeOwner" `
             -e "GITHUB_TOKEN=$GitHubToken" `
             -e "VANILLACORD_INCLUDE_SNAPSHOT=$includeSnapshot" `
+            -e "VANILLACORD_COMPAT_REPORT=$ReportPath" `
             -e "VANILLACORD_REQUIRED_SUPPORTED=$RequiredSupported" `
             -e "VANILLACORD_BEST_EFFORT_LEGACY=$BestEffortLegacy" `
             maven:3.9-eclipse-temurin-25 `

@@ -7,6 +7,14 @@ on:
         description: "Include latest Mojang snapshot/RC"
         required: false
         default: "true"
+      required_supported:
+        description: "Space-separated required supported Minecraft versions"
+        required: false
+        default: "1.21.11 1.20.6 1.20.4 1.19.4 1.18.2"
+      best_effort_legacy:
+        description: "Space-separated best-effort legacy Minecraft versions"
+        required: false
+        default: "1.17.1 1.16.5 1.12.2 1.8.9 1.7.10"
 
 env:
   BRIDGE_OWNER: ${{ github.repository_owner }}
@@ -14,6 +22,9 @@ env:
   BRIDGE_PACKAGES_USERNAME: ${{ vars.BRIDGE_PACKAGES_USERNAME || github.actor }}
   BRIDGE_PACKAGES_TOKEN: ${{ secrets.BRIDGE_PACKAGES_TOKEN || github.token }}
   VANILLACORD_INCLUDE_SNAPSHOT: ${{ inputs.include_snapshot || 'true' }}
+  VANILLACORD_REQUIRED_SUPPORTED: ${{ inputs.required_supported || '1.21.11 1.20.6 1.20.4 1.19.4 1.18.2' }}
+  VANILLACORD_BEST_EFFORT_LEGACY: ${{ inputs.best_effort_legacy || '1.17.1 1.16.5 1.12.2 1.8.9 1.7.10' }}
+  VANILLACORD_COMPAT_REPORT: docs/minecraft-compatibility-report.md
 
 permissions:
   contents: read
@@ -57,10 +68,14 @@ jobs:
       - name: Run Minecraft compatibility probe
         run: bash ./scripts/check-minecraft-compatibility.sh artifacts/VanillaCord.jar
 
+      - name: Add report to job summary
+        if: always()
+        run: cat "$VANILLACORD_COMPAT_REPORT" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Upload compatibility report
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: minecraft-compatibility-report
-          path: compatibility-report.md
+          path: ${{ env.VANILLACORD_COMPAT_REPORT }}
           if-no-files-found: warn
