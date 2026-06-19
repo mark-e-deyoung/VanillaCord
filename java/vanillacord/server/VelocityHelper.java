@@ -3,7 +3,8 @@ package vanillacord.server;
 import bridge.Invocation;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
-import com.mojang.authlib.properties.PropertyMap;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.EmptyByteBuf;
 import io.netty.channel.Channel;
@@ -87,14 +88,15 @@ public class VelocityHelper extends ForwardingHelper {
             readVarint(data); // we don't do anything with the protocol version at this time
 
             new Invocation(PlayerConnection.class).ofMethod("setAddress").with(connection).with(readString(data)).invoke();
-            GameProfile profile = new GameProfile(new UUID(data.readLong(), data.readLong()), readString(data));
-            channel.attr(PROFILE_KEY).set(profile);
-
-            PropertyMap properties = profile.getProperties();
+            UUID playerId = new UUID(data.readLong(), data.readLong());
+            String playerName = readString(data);
+            Multimap<String, Property> props = ArrayListMultimap.create();
             for (int i = 0, length = readVarint(data); i < length; ++i) {
                 final String name = readString(data);
-                properties.put(name, new Property(name, readString(data), (data.readBoolean())? readString(data) : null));
+                props.put(name, new Property(name, readString(data), (data.readBoolean())? readString(data) : null));
             }
+            GameProfile profile = ForwardingHelper.createProfile(playerId, playerName, props);
+            channel.attr(PROFILE_KEY).set(profile);
 
             // Continue login flow
             try {

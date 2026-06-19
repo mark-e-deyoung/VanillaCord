@@ -4,6 +4,8 @@ import bridge.Invocation;
 import com.google.gson.Gson;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import io.netty.channel.Channel;
 import io.netty.util.AttributeKey;
 import vanillacord.translation.HandshakePacket;
@@ -73,11 +75,11 @@ public class BungeeHelper extends ForwardingHelper {
     public GameProfile injectProfile(Object connection, String username) {
         try {
             Channel channel = new Invocation(PlayerConnection.class).ofMethod("getChannel").with(connection).invoke();
-            GameProfile profile = new GameProfile(channel.attr(UUID_KEY).get(), username);
+            Multimap<String, Property> props = ArrayListMultimap.create();
             for (Property property : channel.attr(PROPERTIES_KEY).get()) {
-                profile.getProperties().put(property.name(), property);
+                props.put(property.name(), property);
             }
-            return profile;
+            return ForwardingHelper.createProfile(channel.attr(UUID_KEY).get(), username, props);
         } catch (Exception e) {
             throw QuietException.show(e);
         }
