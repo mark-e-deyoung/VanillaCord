@@ -70,7 +70,12 @@ jobs:
 
       - name: Add report to job summary
         if: always()
-        run: cat "$VANILLACORD_COMPAT_REPORT" >> "$GITHUB_STEP_SUMMARY"
+        run: |
+          if [[ -f "$VANILLACORD_COMPAT_REPORT" ]]; then
+            cat "$VANILLACORD_COMPAT_REPORT" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No compatibility report was generated." >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - name: Upload compatibility report
         if: always()
