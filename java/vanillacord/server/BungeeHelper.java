@@ -48,8 +48,8 @@ public class BungeeHelper extends ForwardingHelper {
 
             if (seecrets == null) {
                 channel.attr(PROPERTIES_KEY).set((split.length == 3)? new Property[0] : GSON.fromJson(split[3], Property[].class));
-            } else if (split.length == 4) {
-                Property[] properties = GSON.fromJson(split[3], Property[].class);
+            } else {
+                Property[] properties = (split.length == 4)? GSON.fromJson(split[3], Property[].class) : new Property[0];
                 if (properties.length != 0) {
                     int length, i = 0;
                     boolean invalid = true;
@@ -65,6 +65,8 @@ public class BungeeHelper extends ForwardingHelper {
                     }
                     if (invalid) throw QuietException.show("Received invalid IP forwarding data. Did you use the right forwarding secret?");
                     channel.attr(PROPERTIES_KEY).set(modified);
+                } else {
+                    channel.attr(PROPERTIES_KEY).set(properties);
                 }
             }
         } catch (Exception e) {
