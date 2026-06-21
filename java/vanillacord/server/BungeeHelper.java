@@ -77,11 +77,18 @@ public class BungeeHelper extends ForwardingHelper {
     public GameProfile injectProfile(Object connection, String username) {
         try {
             Channel channel = new Invocation(PlayerConnection.class).ofMethod("getChannel").with(connection).invoke();
-            Multimap<String, Property> props = ArrayListMultimap.create();
-            for (Property property : channel.attr(PROPERTIES_KEY).get()) {
-                props.put(property.name(), property);
+            UUID uuid = channel.attr(UUID_KEY).get();
+            if (uuid == null) {
+                throw QuietException.show("IP forwarding data missing for connecting player. Is IP forwarding enabled on the proxy?");
             }
-            return ForwardingHelper.createProfile(channel.attr(UUID_KEY).get(), username, props);
+            Property[] properties = channel.attr(PROPERTIES_KEY).get();
+            Multimap<String, Property> props = ArrayListMultimap.create();
+            if (properties != null) {
+                for (Property property : properties) {
+                    props.put(property.name(), property);
+                }
+            }
+            return ForwardingHelper.createProfile(uuid, username, props);
         } catch (Exception e) {
             throw QuietException.show(e);
         }

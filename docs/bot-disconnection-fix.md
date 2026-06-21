@@ -74,6 +74,28 @@ transaction ID, null data, bad HMAC signature) correctly throw `QuietException` 
 terminates the Netty channel. The `LOGIN_KEY` attribute is properly cleaned up in a
 `finally` block after the `hello()` call. No fix needed.
 
+## Follow-up: Defensive Null Checks in `injectProfile()` — 2026-06-21
+
+Even with the `parseHandshake()` fix ensuring `PROPERTIES_KEY` is always set, the
+`injectProfile()` method lacked null guards on its channel attributes. If any unusual
+code path called `injectProfile()` without a prior `parseHandshake()` (or with a
+different channel), the NPE would still kill the connection silently.
+
+**Defensive fixes applied to `injectProfile()`:**
+
+1. **`UUID_KEY` null check:** Before using the UUID, verify it's not null. If null,
+   throw a clear error message: *"IP forwarding data missing for connecting player.
+   Is IP forwarding enabled on the proxy?"* — this replaces a cryptic NPE with an
+   actionable message.
+
+2. **`PROPERTIES_KEY` null check:** Wrap the properties iteration in a null guard.
+   If the attribute is unset (null), treat it as an empty property set rather than
+   throwing NPE.
+
+These are belt-and-suspenders measures — the `parseHandshake()` fix should prevent
+null attributes in normal operation, but the defensive checks protect against
+unexpected edge cases and make failures debuggable rather than silent.
+
 ## Next Steps
 
 1. **Build and test:** Compile with `mvn -B verify` (requires JDK 25 + `GITHUB_TOKEN`)
