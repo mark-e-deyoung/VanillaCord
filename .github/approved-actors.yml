@@ -1,0 +1,8 @@
+# Approved actors for contributing to this SupraCraft repository.
+# Issues and PRs from users not on this list are automatically closed.
+users:
+  - mark-e-deyoung
+  - google-jules-bot
+  - codex-bot
+  - codex-cli
+  - gemini-cli
