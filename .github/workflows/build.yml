@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
       - name: Verify no placeholder versions
         run: |
@@ -45,7 +45,7 @@ jobs:
           fi
 
       - name: Set up JDK
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@ad2b38190b15e4d6bdf0c97fb4fca8412226d287
         with:
           distribution: temurin
           java-version: 21
@@ -87,7 +87,7 @@ jobs:
           fi
 
       - name: Upload jar
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: VanillaCord
           path: artifacts/VanillaCord.jar
@@ -112,7 +112,7 @@ jobs:
           echo "TAG=${TAG}" >> "$GITHUB_OUTPUT"
 
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           ref: ${{ steps.vars.outputs.TAG }}
 
@@ -124,7 +124,7 @@ jobs:
           fi
 
       - name: Set up JDK
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@ad2b38190b15e4d6bdf0c97fb4fca8412226d287
         with:
           distribution: temurin
           java-version: 21
@@ -163,7 +163,7 @@ jobs:
           fi
 
       - name: Publish release asset
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@7c4723f7a335432393329f8f1c564994ce50185d
         with:
           tag_name: ${{ steps.vars.outputs.TAG }}
           files: artifacts/VanillaCord.jar
